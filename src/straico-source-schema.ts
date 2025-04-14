@@ -44,7 +44,7 @@ const completionDetailSchema = z.object({
   })
 });
 
-export const straicoSourceResponseSchema = z.object({
+export const straicoChatResponseSchema = z.object({
   data: z.object({
     overall_price: z.object({
       input: z.number(),
@@ -62,4 +62,34 @@ export const straicoSourceResponseSchema = z.object({
   success: z.boolean()
 })
 
-export type StraicoSourceResponse = z.infer<typeof straicoSourceResponseSchema>;
+export type StraicoSourceResponse = z.infer<typeof straicoChatResponseSchema>;
+
+export const straicoChatChunkSchema = z.object({
+  id: z.string().nullish(),
+  created: z.number().nullish(),
+  model: z.string().nullish(),
+  choices: z.array(
+    z.object({
+      delta: z.object({
+        role: z.enum(['assistant']).optional(),
+        content: z.string(),
+        tool_calls: z
+          .array(
+            z.object({
+              id: z.string(),
+              function: z.object({ name: z.string(), arguments: z.string() }),
+            }),
+          )
+          .nullish(),
+      }),
+      finish_reason: z.string().nullish(),
+      index: z.number(),
+    }),
+  ),
+  usage: z
+    .object({
+      prompt_tokens: z.number(),
+      completion_tokens: z.number(),
+    })
+    .nullish(),
+});

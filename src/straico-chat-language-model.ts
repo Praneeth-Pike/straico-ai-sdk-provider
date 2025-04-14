@@ -20,6 +20,9 @@ import type {
 } from './straico-chat-settings';
 import { prepareTools } from './straico-prepare-tools';
 import { mapStraicoFinishReason } from './map-straico-finish-reason';
+import { straicoFailedResponseHandler } from './straico-error';
+import { straicoChatChunkSchema, straicoChatResponseSchema } from './straico-source-schema';
+import { getResponseMetadata } from './get-response-metadata';
 
 type StraicoChatConfig = {
   provider: string;
@@ -186,7 +189,7 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
       value: response,
       rawValue: rawResponse,
     } = await postJsonToApi({
-      url: `${this.config.baseURL}/chat/completions`,
+      url: `${this.config.baseURL}/prompt/completion`,
       headers: combineHeaders(this.config.headers(), options.headers),
       body: args,
       failedResponseHandler: straicoFailedResponseHandler,
@@ -198,7 +201,7 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
     });
 
     const { messages: rawPrompt, ...rawSettings } = args;
-    const choice = response.choices[0];
+    const choice = response.data?.completions[0].completion?.choices?.[0];
 
     // extract text content.
     // image content or reference content is currently ignored.
@@ -217,16 +220,11 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 
     return {
       text,
-      toolCalls: choice.message.tool_calls?.map(toolCall => ({
-        toolCallType: 'function',
-        toolCallId: toolCall.id,
-        toolName: toolCall.function.name,
-        args: toolCall.function.arguments as string,
-      })),
+
       finishReason: mapStraicoFinishReason(choice.finish_reason),
       usage: {
-        promptTokens: response.usage.prompt_tokens,
-        completionTokens: response.usage.completion_tokens,
+        promptTokens: response.data?.overall_words.input,
+        completionTokens: response.data?.overall_words.output,
       },
       rawCall: { rawPrompt, rawSettings },
       rawResponse: {
@@ -234,7 +232,7 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
         body: rawResponse,
       },
       request: { body: JSON.stringify(args) },
-      response: getResponseMetadata(response),
+      response: getResponseMetadata(response.data?.completions[0].completion),
       warnings,
     };
   }
@@ -247,12 +245,12 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
     const body = { ...args, stream: true };
 
     const { responseHeaders, value: response } = await postJsonToApi({
-      url: `${this.config.baseURL}/chat/completions`,
+      url: `${this.config.baseURL}/prompt/completion`,
       headers: combineHeaders(this.config.headers(), options.headers),
       body,
-      failedResponseHandler: mistralFailedResponseHandler,
+      failedResponseHandler: straicoFailedResponseHandler,
       successfulResponseHandler: createEventSourceResponseHandler(
-        mistralChatChunkSchema,
+        straicoChatChunkSchema,
       ),
       abortSignal: options.abortSignal,
       fetch: this.config.fetch,
@@ -271,7 +269,7 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
     return {
       stream: response.pipeThrough(
         new TransformStream<
-          ParseResult<z.infer<typeof mistralChatChunkSchema>>,
+          ParseResult<z.infer<typeof straicoChatResponseSchema>>,
           LanguageModelV1StreamPart
         >({
           transform(chunk, controller) {
@@ -298,7 +296,7 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
               };
             }
 
-            const choice = value.choices[0];
+            const choice = value.data?.completions[0].completion?.choices?.[0];
 
             if (choice?.finish_reason != null) {
               finishReason = mapStraicoFinishReason(choice.finish_reason);
@@ -379,6 +377,7 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
     };
   }
 }
+
 function extractTextContent(content: z.infer<typeof completionDetailSchema>) {
   if (typeof content === 'string') {
     return content;
