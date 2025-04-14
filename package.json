@@ -1,0 +1,12 @@
+{
+  "name": "straico-ai-sdk-provider",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "author": "praneethpike",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "@ai-sdk/provider": "^1.1.3",
+    "@ai-sdk/provider-utils": "^2.2.7"
+  }
+}
