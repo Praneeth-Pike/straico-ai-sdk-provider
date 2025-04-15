@@ -3,7 +3,7 @@ import { convertUint8ArrayToBase64 } from '@ai-sdk/provider-utils'
 
 // function to iterate through the messages array and extract the file urls
 export const getFileUrls = (prompt: LanguageModelV1Prompt) => {
-	const fileUrls = []
+	const fileUrls: string[] = []
 	for (const message of prompt) {
 		if (message.role === 'user') {
 			for (const part of message.content) {
