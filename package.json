@@ -40,10 +40,10 @@
   "publishConfig": {
     "access": "public"
   },
-  "homepage": "https://github.com/praneethpike/straico-ai-sdk-provider",
+  "homepage": "https://github.com/Praneeth-Pike/straico-ai-sdk-provider.git",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/praneethpike/straico-ai-sdk-provider.git"
+    "url": "https://github.com/Praneeth-Pike/straico-ai-sdk-provider.git"
   },
   "keywords": [
     "straico",
