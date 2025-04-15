@@ -1,0 +1,29 @@
+# Development and testing files
+/node_modules
+.git
+.github
+.gitignore
+.env*
+*.log
+*.tgz
+*.tar.gz
+
+# Tests
+vitest.*.config.ts
+/coverage
+*.test.ts
+
+# Source code (since we're publishing the compiled version)
+# But keep the TypeScript definitions
+!*.d.ts
+
+# Config files
+tsconfig.json
+biome.json
+.eslintrc*
+.prettier*
+
+# CI/CD
+.github
+.travis.yml
+.gitlab-ci.yml 

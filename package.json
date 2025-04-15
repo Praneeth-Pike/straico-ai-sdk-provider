@@ -1,10 +1,16 @@
 {
   "name": "straico-ai-sdk-provider",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "dist/index.js",
+  "types": "index.ts",
   "author": "praneethpike",
   "license": "MIT",
   "private": false,
+  "files": [
+    "dist",
+    "src",
+    "index.ts"
+  ],
   "scripts": {
     "build": "tsup ./index.ts --out-dir dist",
     "clean": "rm -rf dist && rm -rf internal/dist",
@@ -44,7 +50,7 @@
   "homepage": "https://github.com/Praneeth-Pike/straico-ai-sdk-provider.git",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Praneeth-Pike/straico-ai-sdk-provider.git"
+    "url": "git+https://github.com/Praneeth-Pike/straico-ai-sdk-provider.git"
   },
   "keywords": [
     "straico",
