@@ -1,6 +1,6 @@
 {
   "name": "straico-ai-sdk-provider",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "dist/index.js",
   "types": "index.ts",
   "author": "praneethpike",
