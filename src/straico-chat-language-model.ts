@@ -130,7 +130,10 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 			rawValue: rawResponse,
 		} = await postJsonToApi({
 			url: `${this.config.baseURL}/prompt/completion`,
-			headers: combineHeaders(this.config.headers(), options.headers),
+			headers: combineHeaders(
+				this.config.headers(),
+				options.headers || {},
+			),
 			body: requestBody,
 			failedResponseHandler: straicoFailedResponseHandler,
 			successfulResponseHandler: createJsonResponseHandler(
@@ -174,7 +177,10 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 			: { signal: new AbortController().signal, onCancel: () => {} }
 
 		// First get the full response using doGenerate
-		const fullResponse = await this.doGenerate(options)
+		const fullResponse = await this.doGenerate({
+			...options,
+			headers: options.headers || {},
+		})
 		const fullText = fullResponse.text || ''
 
 		// Split the response into words to simulate chunks
