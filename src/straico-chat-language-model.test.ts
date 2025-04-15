@@ -98,7 +98,7 @@ describe('StraicoChatLanguageModel', () => {
 
 	test('doStream should simulate streaming with chunked responses', async () => {
 		// Mock doGenerate to return a predefined response
-		jest.spyOn(model, 'doGenerate').mockResolvedValue({
+		vi.spyOn(model, 'doGenerate').mockResolvedValue({
 			text: 'This is a test response for streaming',
 			finishReason: 'stop',
 			usage: {
