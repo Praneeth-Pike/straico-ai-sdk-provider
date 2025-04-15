@@ -1,15 +1,18 @@
 export function getResponseMetadata({
-    id,
     model,
     created,
+    role,
+    content,
   }: {
-    id?: string | undefined | null;
-    created?: number | undefined | null;
     model?: string | undefined | null;
+    created?: number | undefined | null;
+    role?: string | undefined | null;
+    content?: string | undefined | null;
   }) {
     return {
-      id: id ?? undefined,
       modelId: model ?? undefined,
       timestamp: created != null ? new Date(created * 1000) : undefined,
+      role: role ?? undefined,
+      content: content ?? undefined,
     };
   }

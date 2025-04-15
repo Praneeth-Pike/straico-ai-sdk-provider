@@ -63,33 +63,3 @@ export const straicoChatResponseSchema = z.object({
 })
 
 export type StraicoSourceResponse = z.infer<typeof straicoChatResponseSchema>;
-
-export const straicoChatChunkSchema = z.object({
-  id: z.string().nullish(),
-  created: z.number().nullish(),
-  model: z.string().nullish(),
-  choices: z.array(
-    z.object({
-      delta: z.object({
-        role: z.enum(['assistant']).optional(),
-        content: z.string(),
-        tool_calls: z
-          .array(
-            z.object({
-              id: z.string(),
-              function: z.object({ name: z.string(), arguments: z.string() }),
-            }),
-          )
-          .nullish(),
-      }),
-      finish_reason: z.string().nullish(),
-      index: z.number(),
-    }),
-  ),
-  usage: z
-    .object({
-      prompt_tokens: z.number(),
-      completion_tokens: z.number(),
-    })
-    .nullish(),
-});
