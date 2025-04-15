@@ -25,20 +25,54 @@ describe('StraicoChatLanguageModel', () => {
 	test('doGenerate should make API call with correct structure', async () => {
 		const mockResponse = {
 			data: {
+				overall_price: {
+					input: 0.0001,
+					output: 0.0002,
+					total: 0.0003,
+				},
+				overall_words: {
+					input: 10,
+					output: 5,
+					total: 15,
+				},
 				completions: {
 					'gpt-4': {
 						completion: {
+							id: 'test-id',
+							model: 'gpt-4',
+							object: 'chat.completion',
+							created: 1234567890,
 							choices: [
 								{
-									message: { content: 'Test response' },
+									index: 0,
+									message: {
+										role: 'assistant',
+										content: 'Test response',
+									},
 									finish_reason: 'stop',
 								},
 							],
+							usage: {
+								prompt_tokens: 10,
+								completion_tokens: 5,
+								total_tokens: 15,
+							},
+							system_fingerprint: null,
 						},
-						words: { input: 10, output: 5 },
+						price: {
+							input: 0.0001,
+							output: 0.0002,
+							total: 0.0003,
+						},
+						words: {
+							input: 10,
+							output: 5,
+							total: 15,
+						},
 					},
 				},
 			},
+			success: true,
 		}
 
 		mockConfig.fetch.mockResolvedValueOnce(

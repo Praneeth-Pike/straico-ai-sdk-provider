@@ -23,6 +23,7 @@
     "biome": "^0.3.3"
   },
   "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.14.1",
     "ai": "^4.3.7",
