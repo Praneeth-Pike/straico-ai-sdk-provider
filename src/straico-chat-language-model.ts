@@ -73,10 +73,12 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 
 			// Convert prompt to single message string
 			message: convertToStraicoChatMessages(prompt),
-			file_urls: getFileUrls(prompt),
-			youtube_urls: [],
-			temperature,
-			max_tokens: maxTokens,
+			file_urls:
+				getFileUrls(prompt).length > 0
+					? getFileUrls(prompt)
+					: undefined,
+			temperature: temperature ?? undefined,
+			max_tokens: maxTokens ?? undefined,
 
 			inputFormat: 'prompt',
 			// Response format
@@ -117,10 +119,9 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 		const requestBody: StraicoRequest = {
 			models: [args.models[0]],
 			message: args.message,
-			file_urls: args.file_urls,
-			youtube_urls: args.youtube_urls,
-			temperature: args.temperature,
-			max_tokens: args.max_tokens,
+			file_urls: args.file_urls ?? undefined,
+			temperature: args.temperature ?? undefined,
+			max_tokens: args.max_tokens ?? undefined,
 		}
 
 		const {
