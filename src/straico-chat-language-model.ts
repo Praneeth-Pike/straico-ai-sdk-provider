@@ -1,7 +1,6 @@
-import {
-	UnsupportedFunctionalityError,
-	type LanguageModelV1,
-	type LanguageModelV1CallWarning,
+import type {
+	LanguageModelV1,
+	LanguageModelV1CallWarning,
 } from '@ai-sdk/provider'
 import {
 	type FetchFunction,
@@ -33,6 +32,7 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 	readonly specificationVersion = 'v1'
 	readonly defaultObjectGenerationMode = 'json'
 	readonly supportsImageUrls = false
+	readonly supportsStructuredOutputs = false
 
 	readonly modelId: StraicoChatModelId
 	readonly settings: StraicoChatSettings
@@ -166,11 +166,65 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 
 	// doStream
 	async doStream(
-		_options: Parameters<LanguageModelV1['doStream']>[0],
+		options: Parameters<LanguageModelV1['doStream']>[0],
 	): Promise<Awaited<ReturnType<LanguageModelV1['doStream']>>> {
-		throw new UnsupportedFunctionalityError({
-			functionality: 'streaming',
-			message: 'Streaming is not supported for Straico',
+		// Simulate streaming by chunking the full response
+		const controller = options.abortSignal
+			? { signal: options.abortSignal, onCancel: () => {} }
+			: { signal: new AbortController().signal, onCancel: () => {} }
+
+		// First get the full response using doGenerate
+		const fullResponse = await this.doGenerate(options)
+		const fullText = fullResponse.text || ''
+
+		// Split the response into words to simulate chunks
+		const words = fullText.split(/\s+/)
+
+		// Create a ReadableStream to emit chunks
+		const stream = new ReadableStream({
+			async start(streamController) {
+				// Function to check if stream should be cancelled
+				function isCancelled() {
+					return controller.signal.aborted
+				}
+
+				// Chunk size (how many words per chunk)
+				const chunkSize = 3
+
+				// Simulate streaming with small delays
+				for (let i = 0; i < words.length; i += chunkSize) {
+					if (isCancelled()) break
+
+					// Get current chunk of words
+					const chunk = words.slice(i, i + chunkSize).join(' ')
+
+					// Add a space if not the end of text
+					const text =
+						i + chunkSize < words.length ? `${chunk} ` : chunk
+
+					// Emit text chunk
+					streamController.enqueue({
+						text,
+						finishReason:
+							i + chunkSize >= words.length
+								? fullResponse.finishReason
+								: undefined,
+					})
+
+					// Simulate network delay
+					await new Promise((resolve) => setTimeout(resolve, 100))
+				}
+
+				streamController.close()
+			},
 		})
+
+		return {
+			stream,
+			rawCall: fullResponse.rawCall,
+			rawResponse: fullResponse.rawResponse,
+			request: fullResponse.request,
+			warnings: fullResponse.warnings || [],
+		}
 	}
 }
