@@ -3,6 +3,7 @@ import {
 	loadApiKey,
 	withoutTrailingSlash,
 } from '@ai-sdk/provider-utils'
+import type { ProviderV1 } from '@ai-sdk/provider'
 import { StraicoChatLanguageModel } from './straico-chat-language-model'
 import type {
 	StraicoChatModelId,
@@ -10,7 +11,7 @@ import type {
 } from './straico-chat-settings'
 
 // Define the StraicoProvider interface
-export interface StraicoProvider {
+export interface StraicoProvider extends ProviderV1 {
 	(
 		modelId: StraicoChatModelId,
 		settings?: StraicoChatSettings,
@@ -21,6 +22,15 @@ export interface StraicoProvider {
 		modelId: StraicoChatModelId,
 		settings?: StraicoChatSettings,
 	): StraicoChatLanguageModel
+
+	// Required by ProviderV1 interface
+	languageModel(
+		modelId: StraicoChatModelId,
+		settings?: StraicoChatSettings,
+	): StraicoChatLanguageModel
+
+	// Required by ProviderV1 interface
+	textEmbeddingModel: never
 }
 
 // Define settings applicable to the provider itself
@@ -97,6 +107,12 @@ export function createStraicoProvider(
 
 	// Assign the chat method
 	provider.chat = createModel
+
+	// Assign languageModel method required by ProviderV1
+	provider.languageModel = createModel
+
+	// Assign textEmbeddingModel as never (not supported yet)
+	provider.textEmbeddingModel = null as never
 
 	return provider as StraicoProvider
 }
