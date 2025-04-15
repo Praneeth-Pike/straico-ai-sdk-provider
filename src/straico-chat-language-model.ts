@@ -131,7 +131,7 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 		} = await postJsonToApi({
 			url: `${this.config.baseURL}/prompt/completion`,
 			headers: combineHeaders(this.config.headers(), options.headers),
-			body: JSON.stringify(requestBody),
+			body: requestBody,
 			failedResponseHandler: straicoFailedResponseHandler,
 			successfulResponseHandler: createJsonResponseHandler(
 				straicoChatResponseSchema,
