@@ -199,12 +199,13 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 					const chunk = words.slice(i, i + chunkSize).join(' ')
 
 					// Add a space if not the end of text
-					const text =
+					const textDelta =
 						i + chunkSize < words.length ? `${chunk} ` : chunk
 
-					// Emit text chunk
+					// Emit text chunk using standard format
 					streamController.enqueue({
-						text,
+						type: 'text-delta',
+						textDelta,
 						finishReason:
 							i + chunkSize >= words.length
 								? fullResponse.finishReason

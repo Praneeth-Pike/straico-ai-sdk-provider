@@ -96,9 +96,51 @@ describe('StraicoChatLanguageModel', () => {
 		})
 	})
 
-	test('doStream should throw unsupported error', async () => {
-		await expect(model.doStream({} as any)).rejects.toThrow(
-			'Streaming is not supported for Straico',
-		)
+	test('doStream should simulate streaming with chunked responses', async () => {
+		// Mock doGenerate to return a predefined response
+		jest.spyOn(model, 'doGenerate').mockResolvedValue({
+			text: 'This is a test response for streaming',
+			finishReason: 'stop',
+			usage: {
+				promptTokens: 10,
+				completionTokens: 7,
+			},
+			rawCall: { rawPrompt: {}, rawSettings: {} },
+			rawResponse: {},
+			request: {},
+			response: {},
+			warnings: [],
+		})
+
+		// Call doStream
+		const result = await model.doStream({
+			mode: { type: 'regular' },
+			prompt: [],
+			inputFormat: 'prompt',
+		})
+
+		// Verify stream exists
+		expect(result.stream).toBeDefined()
+
+		// Collect chunks from the stream
+		const reader = result.stream.getReader()
+		const chunks: { textDelta: string }[] = []
+
+		let done = false
+		while (!done) {
+			const { value, done: isDone } = await reader.read()
+			if (isDone) {
+				done = true
+			} else if (value && 'textDelta' in value) {
+				chunks.push(value)
+			}
+		}
+
+		// Verify chunks were received
+		expect(chunks.length).toBeGreaterThan(0)
+
+		// Verify full text when joined
+		const fullText = chunks.map((chunk) => chunk.textDelta).join('')
+		expect(fullText).toBe('This is a test response for streaming')
 	})
 })
