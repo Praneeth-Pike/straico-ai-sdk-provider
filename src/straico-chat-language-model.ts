@@ -183,9 +183,6 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 		})
 		const fullText = fullResponse.text || ''
 
-		// Split the response into words to simulate chunks
-		const words = fullText.split(/\s+/)
-
 		// Create a ReadableStream to emit chunks
 		const stream = new ReadableStream({
 			async start(streamController) {
@@ -194,26 +191,22 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 					return controller.signal.aborted
 				}
 
-				// Chunk size (how many words per chunk)
-				const chunkSize = 3
+				// Character-based chunk size (preserves all whitespace and markdown formatting)
+				const chunkSize = 10
 
 				// Simulate streaming with small delays
-				for (let i = 0; i < words.length; i += chunkSize) {
+				for (let i = 0; i < fullText.length; i += chunkSize) {
 					if (isCancelled()) break
 
-					// Get current chunk of words
-					const chunk = words.slice(i, i + chunkSize).join(' ')
-
-					// Add a space if not the end of text
-					const textDelta =
-						i + chunkSize < words.length ? `${chunk} ` : chunk
+					// Get current chunk of characters (preserves newlines and all formatting)
+					const textDelta = fullText.slice(i, i + chunkSize)
 
 					// Emit text chunk using standard format
 					streamController.enqueue({
 						type: 'text-delta',
 						textDelta,
 						finishReason:
-							i + chunkSize >= words.length
+							i + chunkSize >= fullText.length
 								? fullResponse.finishReason
 								: undefined,
 					})
