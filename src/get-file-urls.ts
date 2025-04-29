@@ -1,30 +1,85 @@
 import type { LanguageModelV1Prompt } from '@ai-sdk/provider'
-import { convertUint8ArrayToBase64 } from '@ai-sdk/provider-utils'
-
+import type { FetchFunction } from '@ai-sdk/provider-utils'
 // function to iterate through the messages array and extract the file urls
-export const getFileUrls = (prompt: LanguageModelV1Prompt) => {
+export const getFileUrls = async (
+	prompt: LanguageModelV1Prompt,
+	fetchFn: FetchFunction,
+	headers: Record<string, string>,
+	generateId: () => string,
+): Promise<string[]> => {
 	const fileUrls: string[] = []
 	for (const message of prompt) {
 		if (message.role === 'user') {
 			for (const part of message.content) {
-				// check if the part is of type url
+				// Handle image upload
 				if (part.type === 'image') {
 					const imageUrl =
 						part.image instanceof URL
 							? part.image.toString()
-							: `data:${part.mimeType ?? 'image/png'};base64,${convertUint8ArrayToBase64(part.image)}`
+							: await uploadFile({
+									data: part.image,
+									mimeType: part.mimeType ?? 'image/png',
+									fetchFn,
+									headers,
+									generateId,
+								})
 					fileUrls.push(imageUrl)
 				}
-				// check if the part is of type file
+
+				// Handle file upload
 				if (part.type === 'file') {
 					const fileUrl =
 						part.data instanceof URL
 							? part.data.toString()
-							: part.data
+							: await uploadFile({
+									data: new Uint8Array(
+										Buffer.from(part.data, 'base64'),
+									),
+									mimeType: 'application/octet-stream',
+									fetchFn,
+									headers,
+									generateId,
+								})
 					fileUrls.push(fileUrl)
 				}
 			}
 		}
 	}
 	return fileUrls
+}
+
+async function uploadFile({
+	data,
+	mimeType,
+	fetchFn,
+	headers,
+	generateId,
+}: {
+	data: Uint8Array
+	mimeType: string
+	fetchFn: FetchFunction
+	headers: Record<string, string>
+	generateId: () => string
+}): Promise<string> {
+	const formData = new FormData()
+	const extension = mimeType.split('/')[1] || 'bin'
+	const filename = `${generateId()}.${extension}`
+
+	formData.append('file', new Blob([data], { type: mimeType }), filename)
+
+	const response = await fetchFn('https://api.straico.com/v0/file/upload', {
+		method: 'POST',
+		headers: {
+			...headers,
+			Authorization: headers.Authorization,
+		},
+		body: formData,
+	})
+
+	if (!response.ok) {
+		throw new Error(`File upload failed: ${response.statusText}`)
+	}
+
+	const result = await response.json()
+	return result.data.url
 }

@@ -57,7 +57,7 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 		return url.protocol === 'https:'
 	}
 
-	private getArgs({
+	private async getArgs({
 		mode,
 		prompt,
 		temperature,
@@ -66,6 +66,12 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 		const type = mode.type
 
 		const warnings: LanguageModelV1CallWarning[] = []
+		const fileUrls = await getFileUrls(
+			prompt,
+			this.config.fetch,
+			this.config.headers(),
+			this.config.generateId,
+		)
 
 		const baseArgs = {
 			// Model ID array for multi-model support (but we'll use single model)
@@ -73,14 +79,11 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 
 			// Convert prompt to single message string
 			message: convertToStraicoChatMessages(prompt),
-			file_urls:
-				getFileUrls(prompt).length > 0
-					? getFileUrls(prompt)
-					: undefined,
 			temperature: temperature ?? undefined,
 			max_tokens: maxTokens ?? undefined,
 
 			inputFormat: 'prompt',
+			file_urls: fileUrls.length > 0 ? fileUrls : undefined,
 			// Response format
 			response_format: { type: 'json_object' },
 		}
@@ -113,7 +116,7 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 	async doGenerate(
 		options: Parameters<LanguageModelV1['doGenerate']>[0],
 	): Promise<Awaited<ReturnType<LanguageModelV1['doGenerate']>>> {
-		const { args, warnings } = this.getArgs(options)
+		const { args, warnings } = await this.getArgs(options)
 
 		// construct the request body for straico
 		const requestBody: StraicoRequest = {
