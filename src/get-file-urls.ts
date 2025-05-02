@@ -1,9 +1,7 @@
 import type { LanguageModelV1Prompt } from '@ai-sdk/provider'
-import type { FetchFunction } from '@ai-sdk/provider-utils'
 // function to iterate through the messages array and extract the file urls
 export const getFileUrls = async (
 	prompt: LanguageModelV1Prompt,
-	fetchFn: FetchFunction,
 	headers: Record<string, string>,
 	generateId: () => string,
 ): Promise<string[]> => {
@@ -19,7 +17,6 @@ export const getFileUrls = async (
 							: await uploadFile({
 									data: part.image,
 									mimeType: part.mimeType ?? 'image/png',
-									fetchFn,
 									headers,
 									generateId,
 								})
@@ -36,7 +33,6 @@ export const getFileUrls = async (
 										Buffer.from(part.data, 'base64'),
 									),
 									mimeType: 'application/octet-stream',
-									fetchFn,
 									headers,
 									generateId,
 								})
@@ -51,13 +47,12 @@ export const getFileUrls = async (
 async function uploadFile({
 	data,
 	mimeType,
-	fetchFn,
+
 	headers,
 	generateId,
 }: {
 	data: Uint8Array
 	mimeType: string
-	fetchFn: FetchFunction
 	headers: Record<string, string>
 	generateId: () => string
 }): Promise<string> {
@@ -67,7 +62,7 @@ async function uploadFile({
 
 	formData.append('file', new Blob([data], { type: mimeType }), filename)
 
-	const response = await fetchFn('https://api.straico.com/v0/file/upload', {
+	const response = await fetch('https://api.straico.com/v0/file/upload', {
 		method: 'POST',
 		headers: {
 			...headers,
