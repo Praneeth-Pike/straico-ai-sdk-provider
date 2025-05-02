@@ -68,7 +68,6 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 		const warnings: LanguageModelV1CallWarning[] = []
 		const fileUrls = await getFileUrls(
 			prompt,
-			this.config.fetch,
 			this.config.headers(),
 			this.config.generateId,
 		)
