@@ -60,7 +60,9 @@ async function uploadFile({
 	const extension = mimeType.split('/')[1] || 'bin'
 	const filename = `${generateId()}.${extension}`
 
-	formData.append('file', new Blob([data], { type: mimeType }), filename)
+	const file = new File([data], filename, { type: mimeType })
+
+	formData.append('file', file)
 
 	const response = await fetch('https://api.straico.com/v0/file/upload', {
 		method: 'POST',
