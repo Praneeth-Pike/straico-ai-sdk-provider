@@ -62,6 +62,7 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 		prompt,
 		temperature,
 		maxTokens,
+		providerMetadata,
 	}: Parameters<LanguageModelV1['doGenerate']>[0]) {
 		const type = mode.type
 
@@ -73,10 +74,9 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 
 			// Convert prompt to single message string
 			message: convertToStraicoChatMessages(prompt),
-			file_urls:
-				getFileUrls(prompt).length > 0
-					? getFileUrls(prompt)
-					: undefined,
+			file_urls: providerMetadata?.fileUrls as unknown as
+				| string[]
+				| undefined,
 			temperature: temperature ?? undefined,
 			max_tokens: maxTokens ?? undefined,
 
@@ -212,7 +212,7 @@ export class StraicoChatLanguageModel implements LanguageModelV1 {
 					})
 
 					// Simulate network delay
-					await new Promise((resolve) => setTimeout(resolve, 100))
+					await new Promise((resolve) => setTimeout(resolve, 10))
 				}
 
 				streamController.close()
