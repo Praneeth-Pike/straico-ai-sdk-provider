@@ -1,37 +1,52 @@
 import type { LanguageModelV1Prompt } from '@ai-sdk/provider'
 
+export type StraicoChatMessage = {
+	role: 'system' | 'user' | 'assistant' | 'tool'
+	content: string
+}
 // flatten the text content of the messages array into a single string
 export function convertToStraicoChatMessages(
 	prompt: LanguageModelV1Prompt,
 ): string {
-	let straicoPrompt = ''
-	if (prompt.length === 0) {
-		return straicoPrompt
-	}
-
-	for (let i = 0; i < prompt.length; i++) {
-		const { role, content } = prompt[i]
-
+	const messages: StraicoChatMessage[] = []
+	for (const { role, content } of prompt) {
 		switch (role) {
 			case 'system': {
-				straicoPrompt += `<system>${content}</system>`
+				messages.push({
+					role: 'system',
+					content,
+				})
 				break
 			}
 
 			case 'user': {
-				const userMessage = content
-					.map((part) => {
-						switch (part.type) {
-							case 'text': {
-								return part.text
-							}
-							default: {
-								return ''
-							}
-						}
+				if (content.length === 1 && content[0]?.type === 'text') {
+					messages.push({
+						role: 'user',
+						content: content[0].text,
 					})
-					.join('')
-				straicoPrompt += `<user>${userMessage}</user>`
+					break
+				}
+
+				const contentParts = content.map((part) => {
+					switch (part.type) {
+						case 'text':
+							return {
+								type: 'text' as const,
+								text: part.text,
+							}
+						default: {
+							throw new Error(
+								`Unsupported content part type: ${part.type}`,
+							)
+						}
+					}
+				})
+				messages.push({
+					role: 'user',
+					content: contentParts.map((part) => part.text).join(''),
+				})
+
 				break
 			}
 
@@ -44,21 +59,33 @@ export function convertToStraicoChatMessages(
 							text += part.text
 							break
 						}
+						case 'tool-call':
+						// TODO: Handle reasoning and redacted-reasoning
+						case 'reasoning':
+						case 'redacted-reasoning':
+							break
 						default: {
-							return ''
+							console.log('unsupported part', part)
+							throw new Error(`Unsupported part: ${part.type}`)
 						}
 					}
 				}
 
-				straicoPrompt += `<assistant>${text}</assistant>`
+				messages.push({
+					role: 'assistant',
+					content: text,
+				})
 
 				break
 			}
+
 			default: {
-				return ''
+				// @ts-expect-error
+				const _exhaustiveCheck: never = role
+				throw new Error(`Unsupported role: ${_exhaustiveCheck}`)
 			}
 		}
 	}
 
-	return straicoPrompt
+	return JSON.stringify(messages)
 }
